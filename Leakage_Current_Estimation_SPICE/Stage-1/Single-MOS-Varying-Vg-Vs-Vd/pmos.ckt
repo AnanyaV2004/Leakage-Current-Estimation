@@ -1,0 +1,60 @@
+*CONDUCTION NMOS W1
+
+.INCLUDE 45nm_MGK.pm
+.OPTIONS GMIN=1e-020 ABSTOL=1e-18
+.TEMP 85
+
+*Definizione dei parametri
+.PARAM Lmin=45n
+.PARAM Wmin=45n
+.PARAM Ldiff=90n
+
+	
+*Descrizione della cella
+Mp drain gate source body pmos W={2*Wmin} L={Lmin}
+Vdd 	alim	0		1.1
+* Vg_negative Vg_negative 0 -1.1
+* Vd 	drain	0		0
+* Vg 	gate	Vg_negative 0
+* Vs 	source	0		0
+Vb 	body	alim		0
+
+* Define the DC voltage sources for drain, gate, and source
+Vd drain 0 DC 0
+Vg gate 0 DC 0
+Vs source 0 DC 0
+
+* Nested DC sweep for drain, gate, and source voltages
+* .dc Vd 0 1.1 0.05 Vs 0 1.1 0.05 Vg 0 1.1 1.1
+
+
+* Run the simulation
+.control
+* run
+let vtestg = 0
+let maxi = 1.12
+
+while vtestg le maxi
+  alter Vg = vtestg
+  let Vtests=0
+  while Vtests le maxi
+    alter Vs = Vtests
+    let Vtestd=0
+    while Vtestd le maxi
+      alter Vd = Vtestd
+      dc TEMP 85 85 10
+      echo "$&V(drain), $&V(gate), $&V(source), $&I(Vd), $&I(Vg), $&I(Vs), $&I(Vb)" >> pmos1.csv
+      let Vtestd = Vtestd + 0.05
+    end
+    let Vtests = Vtests + 0.05
+  end
+  let vtestg = vtestg + 1.1
+end
+.endc
+* .echo output.txt
+* .print DC V(drain) V(gate) V(source) I(Vd) I(Vg) I(Vs) I(Vb)
+* .print
+* Output the results
+* .print DC V(D) V(G) V(S)
+
+.END

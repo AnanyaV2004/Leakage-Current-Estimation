@@ -1,0 +1,305 @@
+* CIRCUIT *
+.include 45nm_MGK.pm
+
+.PARAM supply=1.1
+.PARAM Lmin=45nm
+.PARAM Wmin=45nm
+.PARAM Wp={2*Wmin}
+
+vvdd vdd 0 supply
+.global vdd gnd
+
+********* NAND GATE ***********
+.subckt nand a b y p p1
+MP1 y a vdd vdd pmos w={Wp} L={Lmin}
+MP2 y b vdd vdd pmos w={Wp} L={Lmin}
+
+MN1 y a p 0 NMOS W={Wmin} L={Lmin}
+MN2 p b 0 0 NMOS W={Wmin} L={Lmin}
+.ends
+******************************
+
+********* NOR GATE ***********
+.subckt nor a b y p p1
+MP1 y a p vdd pmos w={Wp} L={Lmin}
+MP2 p b vdd vdd pmos w={Wp} L={Lmin}
+
+MN1 y a 0 0 NMOS W={Wmin} L={Lmin}
+MN2 y b 0 0 NMOS W={Wmin} L={Lmin}
+.ends
+******************************
+
+********* INV GATE ***********
+.subckt inv x y
+MP1 y x vdd vdd pmos w={Wp} L={Lmin}
+MN1 y x gnd gnd NMOS W={Wmin} L={Lmin}
+.ends
+******************************
+
+******************** CIRCUIT IMPLEMENTATION ********************************
+
+* Layer1
+X1 Cn Out1 inv
+
+*Layer2
+X20 G0 P0 Out20 N20 N20_ nand
+X21 Out1 G0 Out21 N21 N21_ nand
+X22 G1 P1 Out22 N22 N22_ nand
+X23 G0 G1 Out23 N23 N23_ nand
+X24 Out1 G0 Out24 N24 N24_ nand
+X25 G2 P2 Out25 N25 N25_ nand
+X26 G1 G2 Out26 N26 N26_ nand
+X27 G0 G1 Out27 N27 N27_ nand
+X28 G2 P0 Out28 N28 N28_ nand
+X29 Out1 G0 Out29 N29 N29_ nand
+X210 G1 G2 Out210 N210 N210_ nand
+X211 G3 P3 Out211 N211 N211_ nand
+X212 G2 G3 Out212 N212 N212_ nand
+X213 G1 G2 Out213 N213 N213_ nand
+X214 G3 P1 Out214 N214 N214_ nand
+X215 G3 G2 Out215 N215 N215_ nand
+X216 G1 G0 Out216 N216 N216_ nand
+X217 P3 P2 Out217 N217 N217_ nor
+X218 P1 P0 Out218 N218 N218_ nor
+
+*Layer3
+X30 Out20 Out30 inv
+X31 Out21 Out31 inv
+X32 Out22 Out32 inv
+X33 Out23 Out33 inv
+X34 Out24 Out34 inv
+X35 Out25 Out35 inv
+X36 Out26 Out36 inv
+X37 Out27 Out37 inv
+X38 Out28 Out38 inv
+X39 Out29 Out39 inv
+X310 Out210 Out310 inv
+X311 Out211 Out311 inv
+X312 Out212 Out312 inv
+X313 Out213 Out313 inv
+X314 Out214 Out314 inv
+X315 Out215 Out315 inv
+X316 Out216 Out316 inv
+X317 Out217 Out317 inv
+X318 Out218 Out318 inv
+
+* Layer4
+X40 Out30 Out31 Cntx N40 N41_ nor
+X41 Out33 P0 Out41 N41 N41_ nand
+X42 Out34 G1 Out42 N42 N42_ nand
+X43 Out36 P1 Out43 N43 N43_ nand
+X44 Out37 Out38 Out44 N44 N44_ nand
+X45 Out39 Out310 Out45 N45 N45_ nand
+X46 Out312 P2 Out46 N46 N46_ nand
+X47 Out313 Out314 Out47 N47 N47_ nand
+X48 Out315 Out316 Out48 N48 N48_ nand
+X49 Out317 Out318 Out49 N49 N49_ nor
+
+* Layer 5
+X50 Out41 Out50 inv
+X51 Out42 Out51 inv
+X52 Out43 Out52 inv
+X53 Out44 Out53 inv
+X54 Out45 Out54 inv
+X55 Out46 Out55 inv
+X56 Out47 Out56 inv
+X57 Out48 Out57 inv
+X58 Out49 P inv
+
+* Layer 6
+X60 Out50 Out51 Out60 N60 N60_ nor
+X61 Out35 Out52 Out61 N61 N61_ nor
+X62 Out53 Out54 Out62 N62 N62_ nor
+X63 Out311 Out55 Out63 N63 N63_ nor
+X64 Out56 Out57 Out64 N64 N64_ nor
+
+* Layer 7
+X70 Out60 Out70 inv
+X71 Out61 Out71 inv
+X72 Out62 Out72 inv
+X73 Out63 Out73 inv
+X74 Out64 Out74 inv
+
+* Layer 8
+X80 Out70 Out32 Cnty N80 N80_ nor
+X81 Out71 Out72 Cntz N81 N81_ nor
+X82 Out73 Out74 Out82 N82 N82_ nor
+
+* Layer 9
+X90 Out82 G inv
+
+Vcn Cn 0 0
+Vg0 G0 0 0
+Vp0 P0 0 0
+Vg1 G1 0 0
+Vp1 P1 0 0
+Vg2 G2 0 0
+Vp2 P2 0 0
+Vg3 G3 0 0
+Vp3 P3 0 0
+
+
+.control
+run
+dc TEMP 85 85 10
+
+
+* print I(vvdd) I(Vcn) I(Vg0) I(Vp0) I(Vg1) I(Vp1) I(Vg2) I(Vp2) I(Vg3) I(Vp3)
+* let current = I(vvdd) + I(Vcn) + I(Vg0) + I(Vp0) + I(Vg1) + I(Vp1) + I(Vg2) + I(Vp2) + I(Vg3) + I(Vp3)
+* print(current)
+
+** Input combinations
+* Cn P0 P1 P2 P3 G0 G1 G2 G3
+* print V(Cn) V(G0) V(P0) V(G1) V(P1) V(G2) V(P2) V(G3) V(P3)
+* print V(P) V(G) V(Cntz) V(Cnty) V(Cntx)
+* 
+* * 1 0 0 0 1 0 0 1 0
+* alter Vcn = 1.1
+* alter Vg0 = 0
+* alter Vg1 = 0
+* alter Vg2 = 0
+* alter Vg3 = 1.1
+* alter Vp0 = 0
+* alter Vp1 = 0
+* alter Vp2 = 1.1
+* alter Vp3 = 0
+* dc TEMP 85 85 10
+* print V(Cn) V(G0) V(P0) V(G1) V(P1) V(G2) V(P2) V(G3) V(P3)
+* print V(P) V(G) V(Cntz) V(Cnty) V(Cntx) 
+* 
+* * 0 0 1 1 0 1 0 0 1
+* alter Vcn = 0
+* alter Vg0 = 0
+* alter Vg1 = 1.1
+* alter Vg2 = 1.1
+* alter Vg3 = 0
+* alter Vp0 = 1.1
+* alter Vp1 = 0
+* alter Vp2 = 0
+* alter Vp3 = 1.1
+* dc TEMP 85 85 10
+* print V(Cn) V(G0) V(P0) V(G1) V(P1) V(G2) V(P2) V(G3) V(P3)
+* print V(P) V(G) V(Cntz) V(Cnty) V(Cntx)
+* 
+* * 0 1 1 0 1 1 0 1 0
+* alter Vcn = 0
+* alter Vg0 = 1.1
+* alter Vg1 = 1.1
+* alter Vg2 = 0
+* alter Vg3 = 1.1
+* alter Vp0 = 1.1
+* alter Vp1 = 0
+* alter Vp2 = 1.1
+* alter Vp3 = 0
+* dc TEMP 85 85 10
+* print V(Cn) V(G0) V(P0) V(G1) V(P1) V(G2) V(P2) V(G3) V(P3)
+* print V(P) V(G) V(Cntz) V(Cnty) V(Cntx)
+
+* Layer1
+echo "not,  X1,  $&V(Cn),  $&V(Cn)" >> output.csv
+
+* Layer2
+echo "nand,  X20,  $&V(G0),  $&V(P0)" >> output.csv
+echo "nand,  X21,  $&V(Out1),  $&V(G0)" >> output.csv
+echo "nand,  X22,  $&V(G1),  $&V(P1)" >> output.csv
+echo "nand,  X23,  $&V(G0),  $&V(G1)" >> output.csv
+echo "nand,  X24,  $&V(Out1),  $&V(G0)" >> output.csv
+echo "nand,  X25,  $&V(G2),  $&V(P2)" >> output.csv
+echo "nand,  X26,  $&V(G1),  $&V(G2)" >> output.csv
+echo "nand,  X27,  $&V(G0),  $&V(G1)" >> output.csv
+echo "nand,  X28,  $&V(G2),  $&V(P0)" >> output.csv
+echo "nand,  X29,  $&V(Out1),  $&V(G0)" >> output.csv
+echo "nand,  X210,  $&V(G1),  $&V(G2)" >> output.csv
+echo "nand,  X211,  $&V(G3),  $&V(P3)" >> output.csv
+echo "nand,  X212,  $&V(G2),  $&V(G3)" >> output.csv
+echo "nand,  X213,  $&V(G1),  $&V(G2)" >> output.csv
+echo "nand,  X214,  $&V(G3),  $&V(P1)" >> output.csv
+echo "nand,  X215,  $&V(G3),  $&V(G2)" >> output.csv
+echo "nand,  X216,  $&V(G1),  $&V(G0)" >> output.csv
+echo "nor,  X217,  $&V(P3),  $&V(P2)" >> output.csv
+echo "nor,  X218,  $&V(P1),  $&V(P0)" >> output.csv
+
+* Layer3
+echo "not,  X30,  $&V(Out20), $&V(Out20)" >> output.csv
+echo "not,  X31,  $&V(Out21), $&V(Out21)" >> output.csv
+echo "not,  X32,  $&V(Out22), $&V(Out22)" >> output.csv
+echo "not,  X33,  $&V(Out23), $&V(Out23)" >> output.csv
+echo "not,  X34,  $&V(Out24), $&V(Out24)" >> output.csv
+echo "not,  X35,  $&V(Out25), $&V(Out25)" >> output.csv
+echo "not,  X36,  $&V(Out26), $&V(Out26)" >> output.csv
+echo "not,  X37,  $&V(Out27), $&V(Out27)" >> output.csv
+echo "not,  X38,  $&V(Out28), $&V(Out28)" >> output.csv
+echo "not,  X39,  $&V(Out29), $&V(Out29)" >> output.csv
+echo "not,  X310,  $&V(Out210),  $&V(Out210)" >> output.csv
+echo "not,  X311,  $&V(Out211),  $&V(Out211)" >> output.csv
+echo "not,  X312,  $&V(Out212),  $&V(Out212)" >> output.csv
+echo "not,  X313,  $&V(Out213),  $&V(Out213)" >> output.csv
+echo "not,  X314,  $&V(Out214),  $&V(Out214)" >> output.csv
+echo "not,  X315,  $&V(Out215),  $&V(Out215)" >> output.csv
+echo "not,  X316,  $&V(Out216),  $&V(Out216)" >> output.csv
+echo "not,  X317,  $&V(Out217),  $&V(Out217)" >> output.csv
+echo "not,  X318,  $&V(Out218),  $&V(Out218)" >> output.csv
+
+* Layer4
+echo "nor,  X40,  $&V(Out30),  $&V(Out31)" >> output.csv
+echo "nand,  X41,  $&V(Out33),  $&V(P0)" >> output.csv
+echo "nand,  X42,  $&V(Out34),  $&V(G1)" >> output.csv
+echo "nand,  X43,  $&V(Out36),  $&V(P1)" >> output.csv
+echo "nand,  X44,  $&V(Out37),  $&V(Out38)" >> output.csv
+echo "nand,  X45,  $&V(Out39),  $&V(Out310)" >> output.csv
+echo "nand,  X46,  $&V(Out312),  $&V(P2)" >> output.csv
+echo "nand,  X47,  $&V(Out313),  $&V(Out314)" >> output.csv
+echo "nand,  X48,  $&V(Out315),  $&V(Out316)" >> output.csv
+echo "nor,  X49,  $&V(Out317),  $&V(Out318)" >> output.csv
+
+* Layer5
+echo "not,  X50,  $&V(Out41),  $&V(Out41)" >> output.csv
+echo "not,  X51,  $&V(Out42),  $&V(Out42)" >> output.csv
+echo "not,  X52,  $&V(Out43),  $&V(Out43)" >> output.csv
+echo "not,  X53,  $&V(Out44),  $&V(Out44)" >> output.csv
+echo "not,  X54,  $&V(Out45),  $&V(Out45)" >> output.csv
+echo "not,  X55,  $&V(Out46),  $&V(Out46)" >> output.csv
+echo "not,  X56,  $&V(Out47),  $&V(Out47)" >> output.csv
+echo "not,  X57,  $&V(Out48),  $&V(Out48)" >> output.csv
+echo "not,  X58,  $&V(Out49),  $&V(Out49)" >> output.csv
+
+* Layer6
+echo "nor,  X60,  $&V(Out50),  $&V(Out51)" >> output.csv
+echo "nor,  X61,  $&V(Out35),  $&V(Out52)" >> output.csv
+echo "nor,  X62,  $&V(Out53),  $&V(Out54)" >> output.csv
+echo "nor,  X63,  $&V(Out311),  $&V(Out55)" >> output.csv
+echo "nor,  X64,  $&V(Out56),  $&V(Out57)" >> output.csv
+
+* Layer7
+echo "not,  X70,  $&V(Out60),  $&V(Out60)" >> output.csv
+echo "not,  X71,  $&V(Out61),  $&V(Out61)" >> output.csv
+echo "not,  X72,  $&V(Out62),  $&V(Out62)" >> output.csv
+echo "not,  X73,  $&V(Out63),  $&V(Out63)" >> output.csv
+echo "not,  X74,  $&V(Out64),  $&V(Out64)" >> output.csv
+
+* Layer8
+echo "nor,  X80,  $&V(Out70),  $&V(Out32)" >> output.csv
+echo "nor,  X81,  $&V(Out71),  $&V(Out72)" >> output.csv
+echo "nor,  X82,  $&V(Out73),  $&V(Out74)" >> output.csv
+
+* Layer9
+echo "not,  X90,  $&V(Out82),  $&V(Out82)">> output.csv
+
+echo "Name, Value" >> Currents.csv
+echo "Vvdd, $&I(vvdd)">> Currents.csv
+echo "Vcn,  $&I(Vcn)">> Currents.csv
+echo "Vg0,  $&I(Vg0)">> Currents.csv
+echo "Vp0,  $&I(Vp0)">> Currents.csv
+echo "Vg1,  $&I(Vg1)">> Currents.csv
+echo "Vp1,  $&I(Vp1)">> Currents.csv
+echo "Vg2,  $&I(Vg2)">> Currents.csv
+echo "Vp2,  $&I(Vp2)">> Currents.csv
+echo "Vg3,  $&I(Vg3)">> Currents.csv
+echo "Vp3,  $&I(Vp3)">> Currents.csv
+
+* let current = abs(I(vvdd)) + abs(I(Vcn)) + abs(I(Vg0)) + abs(I(Vp0)) + abs(I(Vg1)) + abs(I(Vp1)) + abs(I(Vg2)) + abs(I(Vp2)) + abs(I(Vg3)) + abs(I(Vp3))
+* print current
+
+quit
+.endc
+.end
